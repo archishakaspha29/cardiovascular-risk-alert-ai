@@ -1,1 +1,37 @@
+Model Results
 
+This project uses a Random Forest Classifier to analyze cardiovascular health indicators and classify possible cardiovascular risk.
+
+Evaluation Metrics Used:
+- Accuracy
+- Precision
+- Recall
+- F1-score
+
+Dataset 1 Results:
+- Accuracy: Add your result here
+- Precision: Add your result here
+- Recall: Add your result here
+- F1-score: Add your result here
+
+Dataset 2 Results:
+- Accuracy: Add your result here
+- Precision: Add your result here
+- Recall: Add your result here
+- F1-score: Add your result here
+
+Notes:
+The model showed strong performance on the available public test datasets. These results are based on public datasets and should not be interpreted as clinical validation.
+
+Limitations:
+- The model has not been clinically validated.
+- Dataset representation may be limited.
+- Results may not generalize to all populations.
+- This tool is for risk awareness and early care-seeking support only, not medical diagnosis.
+
+Future Work:
+- Test with larger and more diverse datasets.
+- Add fairness metrics by demographic group.
+- Improve model explainability.
+- Add medical expert review.
+- Build a safer user-facing web or mobile app.
