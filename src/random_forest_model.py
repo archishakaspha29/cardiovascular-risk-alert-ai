@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 # Load the first dataset (heart.csv)
 data1 = pd.read_csv("data/heart.csv")
 
-# Load the second dataset (cardio_train.csv), specifying the correct delimiter
+# Load the first dataset (cardio_train.csv), specifying the correct delimiter
 data2 = pd.read_csv("data/cardio_train.csv", delimiter=";")
 
 # Process the first dataset (data1) with 'Cholesterol' (capital C)
