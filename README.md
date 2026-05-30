@@ -75,6 +75,8 @@ The model showed strong performance on the available public test datasets. Evalu
 
 The results are based only on the available public datasets and should not be interpreted as clinical validation. Future testing with larger, more diverse and medically reviewed datasets is needed before real-world use.
 
+As of now the model has achieved very high performance on the available public datasets, but these results should be interpreted carefully because the risk label was engineered using clinically relevant indicators. Future work includes external validation on larger, more diverse datasets.
+
 ## Limitations
 
 This project has several limitations:
