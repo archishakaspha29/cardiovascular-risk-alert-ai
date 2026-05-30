@@ -9,13 +9,11 @@ Evaluation Metrics Used:
 - F1-score
 
 Dataset 1 Results:
-Dataset 1 Results:
 - Accuracy: 0.99
 - Precision (macro avg): 0.99
 - Recall (macro avg): 0.99
 - F1-score (macro avg): 0.99
 
-Dataset 2 Results:
 Dataset 2 Results:
 - Accuracy: 1.00
 - Precision (macro avg): 1.00
