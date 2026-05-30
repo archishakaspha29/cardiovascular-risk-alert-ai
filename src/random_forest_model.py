@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 data1 = pd.read_csv("data/heart.csv")
 
 # Load the second dataset (cardio_train.csv), specifying the correct delimiter
-data2 = pd.read_csv('data/cardio_train.csv", delimiter=";")
+data2 = pd.read_csv("data/cardio_train.csv", delimiter=";")
 
 # Process the first dataset (data1) with 'Cholesterol' (capital C)
 data1['high_risk'] = ((data1['Cholesterol'] > 240) |  
