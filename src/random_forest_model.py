@@ -12,10 +12,10 @@ from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
 
 # Load the first dataset (heart.csv)
-data1 = pd.read_csv("data/heart.csv)
+data1 = pd.read_csv("data/heart.csv")
 
 # Load the second dataset (cardio_train.csv), specifying the correct delimiter
-data2 = pd.read_csv('data/cardio_train.csv", delimiter=";")
+data2 = pd.read_csv("data/cardio_train.csv", delimiter=";")
 
 # Process the first dataset (data1) with 'Cholesterol' (capital C)
 data1['high_risk'] = ((data1['Cholesterol'] > 240) |  
@@ -30,8 +30,8 @@ data1['RestingECG'] = label_encoder.fit_transform(data1['RestingECG'])
 data1['ExerciseAngina'] = label_encoder.fit_transform(data1['ExerciseAngina'])
 data1['ST_Slope'] = label_encoder.fit_transform(data1['ST_Slope'])
 
-# Splitting features and target for data1
-X1 = data1.drop('high_risk', axis=1)
+# Splitting features and target for data1 (drop original label to avoid leakage)
+X1 = data1.drop(['high_risk', 'HeartDisease'], axis=1)
 y1 = data1['high_risk']
 
 # Process the second dataset (data2) with 'cholesterol' (lowercase c)
@@ -42,8 +42,8 @@ data2['high_risk'] = ((data2['cholesterol'] > 1) |
 # Encode categorical columns for data2
 data2['gender'] = label_encoder.fit_transform(data2['gender'])  # Encode 'Gender'
 
-# Splitting features and target for data2
-X2 = data2.drop('high_risk', axis=1)
+# Splitting features and target for data2 (drop id/cardio to avoid leakage)
+X2 = data2.drop(['high_risk', 'id', 'cardio'], axis=1)
 y2 = data2['high_risk']
 
 # Function to process a dataset
