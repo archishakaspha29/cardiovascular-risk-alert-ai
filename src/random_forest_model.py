@@ -12,7 +12,7 @@ from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
 
 # Load the first dataset (heart.csv)
-data1 = pd.read_csv("data/heart.csv)
+data1 = pd.read_csv("data/heart.csv")
 
 # Load the second dataset (cardio_train.csv), specifying the correct delimiter
 data2 = pd.read_csv('data/cardio_train.csv", delimiter=";")
