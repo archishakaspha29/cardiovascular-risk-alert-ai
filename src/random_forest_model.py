@@ -10,6 +10,11 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.ensemble import RandomForestClassifier  # Import Random Forest Classifier
 from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
+import os
+
+# Ensure results directory exists
+results_dir = "results"
+os.makedirs(results_dir, exist_ok=True)
 
 # Load the first dataset (heart.csv)
 data1 = pd.read_csv("data/heart.csv")
@@ -30,8 +35,8 @@ data1['RestingECG'] = label_encoder.fit_transform(data1['RestingECG'])
 data1['ExerciseAngina'] = label_encoder.fit_transform(data1['ExerciseAngina'])
 data1['ST_Slope'] = label_encoder.fit_transform(data1['ST_Slope'])
 
-# Splitting features and target for data1
-X1 = data1.drop('high_risk', axis=1)
+# Splitting features and target for data1 (drop original label to avoid leakage)
+X1 = data1.drop(['high_risk', 'HeartDisease'], axis=1)
 y1 = data1['high_risk']
 
 # Process the second dataset (data2) with 'cholesterol' (lowercase c)
@@ -42,8 +47,8 @@ data2['high_risk'] = ((data2['cholesterol'] > 1) |
 # Encode categorical columns for data2
 data2['gender'] = label_encoder.fit_transform(data2['gender'])  # Encode 'Gender'
 
-# Splitting features and target for data2
-X2 = data2.drop('high_risk', axis=1)
+# Splitting features and target for data2 (drop id/cardio to avoid leakage)
+X2 = data2.drop(['high_risk', 'id', 'cardio'], axis=1)
 y2 = data2['high_risk']
 
 # Function to process a dataset
@@ -80,17 +85,15 @@ y1_pred, model1 = evaluate_model(X1_train_scaled, y1_train, X1_test_scaled, y1_t
 y2_pred, model2 = evaluate_model(X2_train_scaled, y2_train, X2_test_scaled, y2_test, "Dataset 2")
 
 # Visualization of classification reports
-def plot_classification_reports(report, title):
+def plot_classification_reports(report, title, out_base=None, formats=('png', 'svg', 'pdf')):
     metrics = ['precision', 'recall', 'f1-score']
-    df = pd.DataFrame(report).transpose().iloc[:-1]  # Remove last row
+    df = pd.DataFrame(report).transpose().iloc[:-1]
 
     plt.figure(figsize=(10, 5))
-    
-    # Plotting metrics
+
     for metric in metrics:
         plt.plot(df.index, df[metric], marker='o', label=f'{metric}')
 
-    # Customize the plot
     plt.title(title)
     plt.xticks(rotation=0)
     plt.ylim(0, 1)
@@ -99,15 +102,27 @@ def plot_classification_reports(report, title):
     plt.legend(title='Metrics', loc='lower right')
     plt.grid(axis='y')
     plt.tight_layout()
-    plt.show()
 
-# Plot performance for Dataset 1
-plot_classification_reports(classification_report(y1_test, y1_pred, output_dict=True),
-                            'Dataset 1: Random Forest Model Performance')
+    if out_base:
+        for ext in formats:
+            plt.savefig(f"{out_base}.{ext}")
+        plt.close()
+    else:
+        plt.show()
 
-# Plot performance for Dataset 2
-plot_classification_reports(classification_report(y2_test, y2_pred, output_dict=True),
-                            'Dataset 2: Random Forest Model Performance')
+# Plot performance for Dataset 1 (save to results/)
+plot_classification_reports(
+    classification_report(y1_test, y1_pred, output_dict=True),
+    'Dataset 1: Random Forest Model Performance',
+    out_base=os.path.join(results_dir, 'dataset1_classification')
+)
+
+# Plot performance for Dataset 2 (save to results/)
+plot_classification_reports(
+    classification_report(y2_test, y2_pred, output_dict=True),
+    'Dataset 2: Random Forest Model Performance',
+    out_base=os.path.join(results_dir, 'dataset2_classification')
+)
 
 
 # graphing importance chart
@@ -143,7 +158,10 @@ sns.barplot(x='Importance', y='Feature', data=importance_df, palette='viridis')
 plt.title('Feature Importance for Predicting Heart Disease (Dataset 1)')
 plt.xlabel('Importance')
 plt.ylabel('Feature')
-plt.show()
+plt.tight_layout()
+for ext in ('png', 'svg', 'pdf'):
+    plt.savefig(os.path.join(results_dir, f'feature_importance_dataset1.{ext}'))
+plt.close()
 
 # Optional: Print the importance values
 print(importance_df)
