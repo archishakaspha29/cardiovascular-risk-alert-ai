@@ -1,5 +1,8 @@
 import streamlit as st
 from typing import List
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 st.set_page_config(
     page_title="Cardiovascular Risk-Alert Tool",
@@ -175,6 +178,140 @@ def compute_risk_score(age: int, resting_bp: int, cholesterol: int, max_hr: int,
     return score, factors
 
 
+def create_sample_dataset() -> pd.DataFrame:
+    """
+    Create a mock sample dataset with age, gender, cholesterol, blood pressure, 
+    and calculated risk score values for educational visualization.
+    """
+    np.random.seed(42)
+    
+    # Generate sample data
+    ages = []
+    genders = []
+    cholesterols = []
+    bps = []
+    max_hrs = []
+    chest_pains = []
+    exercise_anginas = []
+    smoke_exposures = []
+    healthcare_accesses = []
+    
+    chest_pain_options = ["Typical Angina", "Atypical Angina", "Non-Anginal Pain", "Asymptomatic"]
+    
+    # Generate ~200 sample profiles (100 female, 100 male, spread across ages 25-75)
+    for _ in range(100):
+        ages.append(np.random.randint(25, 76))
+        genders.append("Female")
+        cholesterols.append(np.random.randint(120, 280))
+        bps.append(np.random.randint(100, 160))
+        max_hrs.append(np.random.randint(80, 200))
+        chest_pains.append(np.random.choice(chest_pain_options))
+        exercise_anginas.append(np.random.choice(["No", "Yes"]))
+        smoke_exposures.append(np.random.choice(["No", "Yes", "Not Sure"]))
+        healthcare_accesses.append(np.random.choice(["No", "Yes", "Sometimes"]))
+    
+    for _ in range(100):
+        ages.append(np.random.randint(25, 76))
+        genders.append("Male")
+        cholesterols.append(np.random.randint(120, 280))
+        bps.append(np.random.randint(100, 160))
+        max_hrs.append(np.random.randint(80, 200))
+        chest_pains.append(np.random.choice(chest_pain_options))
+        exercise_anginas.append(np.random.choice(["No", "Yes"]))
+        smoke_exposures.append(np.random.choice(["No", "Yes", "Not Sure"]))
+        healthcare_accesses.append(np.random.choice(["No", "Yes", "Sometimes"]))
+    
+    df = pd.DataFrame({
+        "age": ages,
+        "gender": genders,
+        "cholesterol": cholesterols,
+        "resting_bp": bps,
+        "max_hr": max_hrs,
+        "chest_pain": chest_pains,
+        "exercise_angina": exercise_anginas,
+        "secondhand_smoke": smoke_exposures,
+        "healthcare_access": healthcare_accesses,
+    })
+    
+    # Calculate risk score for each sample profile
+    risk_scores = []
+    for _, row in df.iterrows():
+        score, _ = compute_risk_score(
+            row["age"],
+            row["resting_bp"],
+            row["cholesterol"],
+            row["max_hr"],
+            row["chest_pain"],
+            row["exercise_angina"],
+            row["secondhand_smoke"],
+            row["healthcare_access"]
+        )
+        risk_scores.append(score)
+    
+    df["risk_score"] = risk_scores
+    return df
+
+
+def calculate_percentile(user_score: int, user_gender: str, user_age: int, sample_df: pd.DataFrame, age_range: int = 5) -> float:
+    """
+    Calculate the user's percentile compared to similar profiles 
+    (same gender, age within ±age_range years).
+    """
+    # Filter for same gender and similar age range
+    mask = (sample_df["gender"] == user_gender) & \
+           (sample_df["age"] >= user_age - age_range) & \
+           (sample_df["age"] <= user_age + age_range)
+    similar_profiles = sample_df[mask]
+    
+    if len(similar_profiles) == 0:
+        return None
+    
+    # Calculate percentile
+    scores_below = len(similar_profiles[similar_profiles["risk_score"] < user_score])
+    percentile = (scores_below / len(similar_profiles)) * 100
+    
+    return percentile
+
+
+def plot_percentile_comparison(user_age: int, user_score: int, user_gender: str, sample_df: pd.DataFrame):
+    """
+    Create side-by-side plots showing average risk score trend by age for female and male groups,
+    with the user's profile highlighted on the appropriate graph.
+    """
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    fig.suptitle("Age and Gender Risk Percentile Comparison\n(Dataset-Based Educational Visualization)", 
+                 fontsize=14, fontweight="bold")
+    
+    genders = ["Female", "Male"]
+    colors = ["#e91e63", "#2196f3"]  # Pink for Female, Blue for Male
+    
+    for idx, (ax, gender, color) in enumerate(zip(axes, genders, colors)):
+        # Filter data for this gender
+        gender_data = sample_df[sample_df["gender"] == gender]
+        
+        # Group by age and calculate mean risk score
+        age_groups = gender_data.groupby("age")["risk_score"].mean().sort_index()
+        
+        # Plot trend line
+        ax.plot(age_groups.index, age_groups.values, marker="o", color=color, 
+                linewidth=2.5, markersize=6, label=f"Average {gender} Risk Score", alpha=0.7)
+        
+        # Highlight user's profile if it matches this gender
+        if user_gender == gender:
+            ax.scatter(user_age, user_score, color="red", s=300, marker="*", 
+                      zorder=5, label="Your Profile", edgecolors="darkred", linewidth=2)
+        
+        ax.set_xlabel("Age (years)", fontsize=11, fontweight="bold")
+        ax.set_ylabel("Risk-Awareness Score", fontsize=11, fontweight="bold")
+        ax.set_title(f"{gender}", fontsize=12, fontweight="bold")
+        ax.grid(True, alpha=0.3, linestyle="--")
+        ax.legend(loc="upper left", fontsize=10)
+        ax.set_xlim(20, 80)
+        
+    plt.tight_layout()
+    return fig
+
+
 # --- Layout -----------------------------------------------------------
 
 st.title("AI-Assisted Cardiovascular Risk-Alert Tool")
@@ -212,6 +349,11 @@ with middle:
 
     with st.form(key="risk_form"):
         age = st.number_input("Age", min_value=1, max_value=120, value=40)
+
+        gender = st.selectbox(
+            "Gender",
+            ["Female", "Male"],
+        )
 
         resting_bp = st.number_input(
             "Resting Blood Pressure / Systolic BP (mm Hg)", min_value=50, max_value=250, value=120
@@ -288,6 +430,60 @@ with middle:
             "Future versions may connect to trained models after validation."
         )
 
+        # --- New: Age and Gender Risk Percentile Comparison Section ---
+        st.markdown("---")
+        st.subheader("Age and Gender Risk Percentile Comparison")
+        
+        st.markdown(
+            "**Educational Dataset Visualization**: This section compares your entered risk-awareness score "
+            "with sample profiles of the same gender and similar age range (±5 years). "
+            "This is an educational comparison only and is NOT a clinical percentile or medical diagnosis."
+        )
+        
+        # Create or load sample dataset
+        sample_df = create_sample_dataset()
+        
+        # Calculate user's percentile
+        percentile = calculate_percentile(risk_score, gender, age, sample_df, age_range=5)
+        
+        if percentile is not None:
+            # Display percentile explanation
+            st.write(
+                f"**Your percentile**: {percentile:.1f}th percentile"
+            )
+            st.write(
+                f"Your risk-awareness score of **{risk_score}** is higher than approximately "
+                f"**{percentile:.1f}%** of sample profiles in this educational dataset "
+                f"with the same gender ({gender}) and similar age ({age}±5 years)."
+            )
+            st.write(
+                "**What this means**: A higher percentile indicates your entered risk indicators are "
+                "higher compared with similar sample profiles. A lower percentile means your entered indicators "
+                "are lower compared with similar sample profiles. This is educational context only and should "
+                "not be interpreted as a clinical diagnosis or medical risk assessment."
+            )
+            
+            # Plot comparison graphs
+            fig = plot_percentile_comparison(age, risk_score, gender, sample_df)
+            st.pyplot(fig)
+            
+            st.markdown("**Graph Explanation:**")
+            st.write(
+                "- The line shows the average risk-awareness score trend by age for each gender group.\n"
+                "- The red star marks **your profile** on the appropriate gender graph.\n"
+                "- This visualization helps you see where your entered risk indicators fall relative to the age and gender trend in the sample dataset."
+            )
+        else:
+            st.warning("Not enough similar profiles in the sample dataset to calculate percentile.")
+        
+        # Disclaimer
+        st.info(
+            "⚠️ **Important Disclaimer**: This dataset-based percentile comparison is NOT a clinical percentile, "
+            "NOT a medical diagnosis, and NOT a substitute for professional medical advice. It is an educational "
+            "visualization based on a mock sample dataset. Your actual cardiovascular risk should be assessed by a "
+            "qualified healthcare provider using clinically validated tools and your complete medical history."
+        )
+
 # Right column: examples, images, and quick cases
 with right:
     st.header("Examples & Visuals")
@@ -299,6 +495,7 @@ with right:
         {
             "name": "Higher-risk older adult",
             "age": 70,
+            "gender": "Female",
             "resting_bp": 150,
             "cholesterol": 260,
             "max_hr": 90,
@@ -310,6 +507,7 @@ with right:
         {
             "name": "Middle-age moderate",
             "age": 50,
+            "gender": "Male",
             "resting_bp": 130,
             "cholesterol": 210,
             "max_hr": 110,
@@ -321,6 +519,7 @@ with right:
         {
             "name": "Lower-risk younger adult",
             "age": 30,
+            "gender": "Female",
             "resting_bp": 115,
             "cholesterol": 180,
             "max_hr": 170,
@@ -334,7 +533,7 @@ with right:
     for ex in examples:
         with st.expander(ex["name"]):
             st.write(
-                f"Age: {ex['age']}, Resting BP: {ex['resting_bp']}, Cholesterol: {ex['cholesterol']}, "
+                f"Age: {ex['age']}, Gender: {ex['gender']}, Resting BP: {ex['resting_bp']}, Cholesterol: {ex['cholesterol']}, "
                 f"Max HR: {ex['max_hr']}, Chest pain: {ex['chest_pain']}, Exercise angina: {ex['exercise_angina']}"
             )
             s, f = compute_risk_score(
