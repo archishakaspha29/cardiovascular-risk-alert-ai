@@ -7,6 +7,65 @@ st.set_page_config(
     layout="wide",
 )
 
+# --- Custom styles: background, borders, column cards -----------------
+st.markdown(
+    """
+    <style>
+    /* Page background gradient */
+    .stApp {
+        background: linear-gradient(180deg, #f7fbff 0%, #ffffff 100%);
+        color: #0f172a;
+    }
+
+    /* Style column containers created by st.columns -- targets the direct children */
+    .stColumns > div:nth-child(1) {
+        background: #f3f6fb;
+        border: 1px solid #e6edf6;
+        border-radius: 10px;
+        padding: 18px 16px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+    }
+
+    .stColumns > div:nth-child(2) {
+        background: #ffffff;
+        border: 1px solid #e8eef6;
+        border-radius: 10px;
+        padding: 20px 18px;
+        box-shadow: 0 3px 10px rgba(15, 23, 42, 0.04);
+    }
+
+    .stColumns > div:nth-child(3) {
+        background: #fffaf0;
+        border: 1px solid #fff1d6;
+        border-radius: 10px;
+        padding: 18px 16px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+    }
+
+    /* Headings inside cards */
+    .stColumns h2, .stColumns h3, .stColumns h1 {
+        margin-top: 6px;
+        margin-bottom: 8px;
+    }
+
+    /* Make images a bit smaller and rounded */
+    .stImage img {
+        border-radius: 8px;
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* Footer caption spacing */
+    .stCaption {
+        margin-top: 12px;
+        color: #475569;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
 # --- Helper functions -------------------------------------------------
 
 def compute_risk_score(age: int, resting_bp: int, cholesterol: int, max_hr: int,
