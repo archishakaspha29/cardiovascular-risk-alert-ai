@@ -1,5 +1,7 @@
 import streamlit as st
 from typing import List
+import pandas as pd
+import altair as alt
 
 st.set_page_config(
     page_title="Cardiovascular Risk-Alert Tool",
@@ -59,54 +61,27 @@ st.markdown(
     /* Ensure headings inside cards have good contrast */
     .stColumns h2, .stColumns h3, .stColumns h1 {
         margin-top: 6px;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
         color: #0b1220;
     }
 
-    /* Stronger styled call-to-action button look */
-    button.stButton>button {
-        background: linear-gradient(90deg,#ef4444,#f97316) !important;
-        color: white !important;
-        border: none !important;
-        padding: 10px 16px !important;
-        border-radius: 10px !important;
-        box-shadow: 0 8px 24px rgba(249,115,22,0.12) !important;
-    }
-
-    /* Make alerts stand out more */
-    .stAlert {
-        border-left: 6px solid rgba(14,165,164,0.9) !important;
-        border-radius: 8px;
-        padding: 12px 14px !important;
-    }
-
-    /* Images rounded and full width inside card */
+    /* Make images a bit smaller and rounded */
     .stImage img {
         border-radius: 8px;
         max-width: 100%;
         height: auto;
-        display:block;
-        margin-left:auto;
-        margin-right:auto;
     }
 
     /* Footer caption spacing + muted color */
     .stCaption {
-        margin-top: 14px;
-        color: #334155;
-    }
-
-    /* Responsive tweaks: stack columns on narrow screens */
-    @media (max-width: 900px) {
-        .stColumns > div { padding: 12px; }
-        .top-banner-strong { font-size: 13px; padding: 8px 12px; }
+        margin-top: 12px;
+        color: #475569;
     }
     </style>
-
-    <div class="top-banner-strong">Cardiovascular Risk-Alert Tool — educational prototype (not a medical diagnosis)</div>
     """,
     unsafe_allow_html=True,
 )
+
 
 # --- Helper functions -------------------------------------------------
 
@@ -186,27 +161,74 @@ st.markdown(
 cols = st.columns([1, 2, 1])  # left, middle, right
 left, middle, right = cols
 
-# Left column: links, quick info, resources
+# LEFT column: Graphs + Examples + Benchmarking
 with left:
-    st.header("About & Links")
-    st.markdown(
-        "- **Prototype purpose**: educational risk-awareness and care navigation suggestions.\n"
-        "- **Source code**: [GitHub repository](https://github.com/archishakaspha29/cardiovascular-risk-alert-ai)\n"
-        "- **Datasets used**: public heart disease datasets (included in /data)"
-    )
+    st.header("Results & Examples")
+
+    # Placeholder for result-graph: will be populated after form submission
+    st.subheader("Your risk breakdown")
+    result_chart_placeholder = st.empty()
+
+    st.divider()
+
+    st.subheader("Example cases")
+    examples = [
+        {
+            "name": "Higher-risk older adult",
+            "age": 70,
+            "resting_bp": 150,
+            "cholesterol": 260,
+            "max_hr": 90,
+            "chest_pain": "Typical Angina",
+            "exercise_angina": "Yes",
+            "secondhand_smoke": "No",
+            "healthcare_access": "Yes",
+        },
+        {
+            "name": "Middle-age moderate",
+            "age": 50,
+            "resting_bp": 130,
+            "cholesterol": 210,
+            "max_hr": 110,
+            "chest_pain": "Atypical Angina",
+            "exercise_angina": "No",
+            "secondhand_smoke": "Not Sure",
+            "healthcare_access": "Sometimes",
+        },
+        {
+            "name": "Lower-risk younger adult",
+            "age": 30,
+            "resting_bp": 115,
+            "cholesterol": 180,
+            "max_hr": 170,
+            "chest_pain": "Non-Anginal Pain",
+            "exercise_angina": "No",
+            "secondhand_smoke": "No",
+            "healthcare_access": "No",
+        },
+    ]
+
+    for ex in examples:
+        with st.expander(ex["name"]):
+            st.write(
+                f"Age: {ex['age']}, Resting BP: {ex['resting_bp']}, Cholesterol: {ex['cholesterol']}, "
+                f"Max HR: {ex['max_hr']}, Chest pain: {ex['chest_pain']}, Exercise angina: {ex['exercise_angina']}"
+            )
+            s, f = compute_risk_score(
+                ex['age'], ex['resting_bp'], ex['cholesterol'], ex['max_hr'],
+                ex['chest_pain'], ex['exercise_angina'], ex['secondhand_smoke'], ex['healthcare_access']
+            )
+            st.write(f"Computed score: **{s}**")
+            if f:
+                st.write("Main risk factors:")
+                for item in f:
+                    st.write(f"- {item}")
 
     st.markdown("---")
-    st.subheader("Quick tips")
-    st.write(
-        "- If you have emergency symptoms (chest pain, fainting, severe breathlessness) seek urgent care.\n"
-        "- This tool shows general risk indicators only."
-    )
+    st.subheader("Benchmark: average profiles")
+    bench_placeholder = st.empty()
 
-    st.markdown("---")
-    st.subheader("Contact / Learn more")
-    st.write("Author: archishakaspha29 · Educational project")
-
-# Middle column: interactive form (main app)
+# MIDDLE column: interactive form (main app)
 with middle:
     st.header("Enter Health Information")
 
@@ -288,66 +310,64 @@ with middle:
             "Future versions may connect to trained models after validation."
         )
 
-# Right column: examples, images, and quick cases
+        # Prepare data for left-column result chart (presence of each risk factor)
+        possible_factors = [
+            "Older age",
+            "Middle-age risk factor",
+            "High cholesterol",
+            "Borderline cholesterol",
+            "High blood pressure",
+            "Elevated blood pressure",
+            "Lower maximum heart rate",
+            "Exercise-induced angina",
+            "Typical angina chest pain",
+            "Asymptomatic chest pain category",
+            "Secondhand smoke exposure",
+            "Possible secondhand smoke exposure",
+            "Difficulty accessing timely healthcare",
+            "Occasional difficulty accessing timely healthcare",
+        ]
+
+        presence = [1 if f in risk_factors else 0 for f in possible_factors]
+        df_presence = pd.DataFrame({"Risk Factor": possible_factors, "Present": presence})
+
+        # Bar chart: risk factor presence
+        chart = alt.Chart(df_presence[df_presence.Present == 1]).mark_bar(color="#ef4444").encode(
+            x=alt.X('Present:Q', title='Present (1 = yes)'),
+            y=alt.Y('Risk Factor:N', sort='-x', title='Risk factor')
+        ).properties(height=300)
+
+        left.success(f"Computed risk awareness score: {risk_score}")
+        result_chart_placeholder.altair_chart(chart, use_container_width=True)
+
+        # Benchmarking: compute average male/female example profiles
+        male_profile = {"age": 55, "resting_bp": 135, "cholesterol": 230, "max_hr": 140,
+                        "chest_pain": "Atypical Angina", "exercise_angina": "No",
+                        "secondhand_smoke": "No", "healthcare_access": "No"}
+        female_profile = {"age": 55, "resting_bp": 125, "cholesterol": 220, "max_hr": 150,
+                          "chest_pain": "Non-Anginal Pain", "exercise_angina": "No",
+                          "secondhand_smoke": "No", "healthcare_access": "No"}
+
+        m_score, _ = compute_risk_score(**male_profile)
+        f_score, _ = compute_risk_score(**female_profile)
+
+        df_bench = pd.DataFrame({
+            "Profile": ["You", "Avg Male (55)", "Avg Female (55)"],
+            "Score": [risk_score, m_score, f_score]
+        })
+
+        bench_chart = alt.Chart(df_bench).mark_bar().encode(
+            x=alt.X('Profile:N', sort=None),
+            y=alt.Y('Score:Q', scale=alt.Scale(domain=[0, max(df_bench.Score.max(), 6)])),
+            color=alt.condition(alt.datum.Profile == 'You', alt.value('#ef4444'), alt.value('#0ea5a4'))
+        ).properties(height=240)
+
+        bench_placeholder.altair_chart(bench_chart, use_container_width=True)
+
+# RIGHT column: images and contact info
 with right:
-    st.header("Examples & Visuals")
+    st.header("Illustrations & Contact")
 
-    st.subheader("Example cases")
-    st.write("Try these example inputs to see how the score changes:")
-
-    examples = [
-        {
-            "name": "Higher-risk older adult",
-            "age": 70,
-            "resting_bp": 150,
-            "cholesterol": 260,
-            "max_hr": 90,
-            "chest_pain": "Typical Angina",
-            "exercise_angina": "Yes",
-            "secondhand_smoke": "No",
-            "healthcare_access": "Yes",
-        },
-        {
-            "name": "Middle-age moderate",
-            "age": 50,
-            "resting_bp": 130,
-            "cholesterol": 210,
-            "max_hr": 110,
-            "chest_pain": "Atypical Angina",
-            "exercise_angina": "No",
-            "secondhand_smoke": "Not Sure",
-            "healthcare_access": "Sometimes",
-        },
-        {
-            "name": "Lower-risk younger adult",
-            "age": 30,
-            "resting_bp": 115,
-            "cholesterol": 180,
-            "max_hr": 170,
-            "chest_pain": "Non-Anginal Pain",
-            "exercise_angina": "No",
-            "secondhand_smoke": "No",
-            "healthcare_access": "No",
-        },
-    ]
-
-    for ex in examples:
-        with st.expander(ex["name"]):
-            st.write(
-                f"Age: {ex['age']}, Resting BP: {ex['resting_bp']}, Cholesterol: {ex['cholesterol']}, "
-                f"Max HR: {ex['max_hr']}, Chest pain: {ex['chest_pain']}, Exercise angina: {ex['exercise_angina']}"
-            )
-            s, f = compute_risk_score(
-                ex['age'], ex['resting_bp'], ex['cholesterol'], ex['max_hr'],
-                ex['chest_pain'], ex['exercise_angina'], ex['secondhand_smoke'], ex['healthcare_access']
-            )
-            st.write(f"Computed score: **{s}**")
-            if f:
-                st.write("Main risk factors:")
-                for item in f:
-                    st.write(f"- {item}")
-
-    st.markdown("---")
     st.subheader("Illustrations")
     # Public domain / Wikimedia images used as illustrations
     st.image(
@@ -359,6 +379,17 @@ with right:
         caption="ECG / Heart rate illustration",
     )
 
+    st.markdown("---")
+    st.subheader("About & Links")
+    st.markdown(
+        "- **Prototype purpose**: educational risk-awareness and care navigation suggestions.\n"
+        "- **Source code**: [GitHub repository](https://github.com/archishakaspha29/cardiovascular-risk-alert-ai)\n"
+        "- **Datasets used**: public heart disease datasets (included in /data)"
+    )
+
+    st.markdown("---")
+    st.subheader("Contact / Learn more")
+    st.write("Author: archishakaspha29 · Educational project")
 
 # Footer
 st.markdown("---")
