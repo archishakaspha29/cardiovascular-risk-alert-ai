@@ -7,64 +7,106 @@ st.set_page_config(
     layout="wide",
 )
 
-# --- Custom styles: background, borders, column cards -----------------
+# --- Stronger custom styles: higher-contrast background, thicker borders --------
 st.markdown(
     """
     <style>
-    /* Page background gradient */
+    /* Page background gradient with stronger contrast */
     .stApp {
-        background: linear-gradient(180deg, #f7fbff 0%, #ffffff 100%);
-        color: #0f172a;
+        background: linear-gradient(180deg, #e6f0ff 0%, #ffffff 60%);
+        color: #0b1220;
+        min-height: 100vh;
     }
 
-    /* Style column containers created by st.columns -- targets the direct children */
-    .stColumns > div:nth-child(1) {
-        background: #f3f6fb;
-        border: 1px solid #e6edf6;
+    /* Top banner (stronger) */
+    .top-banner-strong {
+        background: linear-gradient(90deg, #ef4444 0%, #f97316 100%);
+        color: white;
+        padding: 12px 20px;
         border-radius: 10px;
-        padding: 18px 16px;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+        margin-bottom: 14px;
+        box-shadow: 0 8px 30px rgba(249,115,22,0.12);
+        font-weight: 700;
+        text-align: center;
+        font-size: 15px;
+    }
+
+    /* Make the column "cards" more visible with thicker borders and contrast */
+    .stColumns > div:nth-child(1) {
+        background: #eaf4ff;
+        border: 2px solid #1d4ed8; /* blue */
+        border-radius: 12px;
+        padding: 20px 18px;
+        box-shadow: 0 6px 20px rgba(29,78,216,0.06);
     }
 
     .stColumns > div:nth-child(2) {
         background: #ffffff;
-        border: 1px solid #e8eef6;
-        border-radius: 10px;
-        padding: 20px 18px;
-        box-shadow: 0 3px 10px rgba(15, 23, 42, 0.04);
+        border: 2px solid #0ea5a4; /* teal */
+        border-radius: 12px;
+        padding: 22px 20px;
+        box-shadow: 0 8px 28px rgba(14,165,164,0.04);
     }
 
     .stColumns > div:nth-child(3) {
-        background: #fffaf0;
-        border: 1px solid #fff1d6;
-        border-radius: 10px;
-        padding: 18px 16px;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+        background: #fff7ed;
+        border: 2px solid #f97316; /* orange */
+        border-radius: 12px;
+        padding: 20px 18px;
+        box-shadow: 0 6px 20px rgba(249,115,22,0.06);
     }
 
-    /* Headings inside cards */
+    /* Ensure headings inside cards have good contrast */
     .stColumns h2, .stColumns h3, .stColumns h1 {
         margin-top: 6px;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
+        color: #0b1220;
     }
 
-    /* Make images a bit smaller and rounded */
+    /* Stronger styled call-to-action button look */
+    button.stButton>button {
+        background: linear-gradient(90deg,#ef4444,#f97316) !important;
+        color: white !important;
+        border: none !important;
+        padding: 10px 16px !important;
+        border-radius: 10px !important;
+        box-shadow: 0 8px 24px rgba(249,115,22,0.12) !important;
+    }
+
+    /* Make alerts stand out more */
+    .stAlert {
+        border-left: 6px solid rgba(14,165,164,0.9) !important;
+        border-radius: 8px;
+        padding: 12px 14px !important;
+    }
+
+    /* Images rounded and full width inside card */
     .stImage img {
         border-radius: 8px;
         max-width: 100%;
         height: auto;
+        display:block;
+        margin-left:auto;
+        margin-right:auto;
     }
 
-    /* Footer caption spacing */
+    /* Footer caption spacing + muted color */
     .stCaption {
-        margin-top: 12px;
-        color: #475569;
+        margin-top: 14px;
+        color: #334155;
+    }
+
+    /* Responsive tweaks: stack columns on narrow screens */
+    @media (max-width: 900px) {
+        .stColumns > div { padding: 12px; }
+        .top-banner-strong { font-size: 13px; padding: 8px 12px; }
     }
     </style>
+
+    <div class="top-banner-strong">Cardiovascular Risk-Alert Tool — educational prototype (not a medical diagnosis)</div>
     """,
     unsafe_allow_html=True,
 )
-
 
 # --- Helper functions -------------------------------------------------
 
