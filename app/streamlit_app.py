@@ -149,15 +149,15 @@ def compute_risk_score(age: int, resting_bp: int, cholesterol: int, max_hr: int,
         factors.append("Lower maximum heart rate")
 
     # Exercise-induced angina
-    if exercise_angina == "Yes":
+    if exercise_angina.startswith("Yes"):
         score += 2
         factors.append("Exercise-induced angina")
 
     # Chest pain category
-    if chest_pain == "Typical Angina":
+    if chest_pain.startswith("Typical Angina"):
         score += 2
         factors.append("Typical angina chest pain")
-    elif chest_pain == "Asymptomatic":
+    elif chest_pain.startswith("Asymptomatic"):
         score += 1
         factors.append("Asymptomatic chest pain category")
 
@@ -355,27 +355,68 @@ with middle:
             ["Female", "Male"],
         )
 
+        st.write("**Resting Blood Pressure** (the top number in a blood pressure reading, such as 120 in 120/80)")
         resting_bp = st.number_input(
             "Resting Blood Pressure / Systolic BP (mm Hg)", min_value=50, max_value=250, value=120
         )
+        st.caption(
+            "📋 **How to measure at home**: Use a home blood pressure cuff. Sit quietly for at least 5 minutes, keep feet flat on the floor, "
+            "keep your back supported, place the cuff on bare skin, keep your arm supported at heart level, avoid talking during the reading, "
+            "and avoid caffeine, exercise, or smoking for about 30 minutes before measuring. **Important**: Do not guess if you do not have a blood pressure monitor—ask your healthcare provider."
+        )
 
+        st.write("**Cholesterol** (from a blood test/lipid panel)")
         cholesterol = st.number_input(
             "Cholesterol (mg/dL)", min_value=50, max_value=600, value=200
         )
+        st.caption(
+            "📋 **How to provide this value**: Enter your total cholesterol in mg/dL from a recent lab result if you know it "
+            "(usually from your doctor's office, clinic, or lab). **Important**: Do not guess. If you do not know your cholesterol, "
+            "ask your healthcare provider for a recent lipid panel result."
+        )
 
-        max_hr = st.number_input("Maximum Heart Rate", min_value=50, max_value=250, value=150)
+        st.write("**Maximum Heart Rate** (the highest heart rate reached during exercise)")
+        max_hr_option = st.radio(
+            "Do you know your maximum heart rate?",
+            ["Yes, I know my exact maximum heart rate", "No, I do not know—use an estimate"],
+            index=1
+        )
+        
+        if max_hr_option == "Yes, I know my exact maximum heart rate":
+            max_hr = st.number_input("Maximum Heart Rate", min_value=50, max_value=250, value=150)
+        else:
+            age_value = age
+            estimated_max_hr = 220 - age_value
+            st.info(
+                f"**Estimated Maximum Heart Rate**: {estimated_max_hr} bpm (using formula: 220 − your age). "
+                f"This is **only an estimate**, not a medical measurement. Most people do not know their true maximum heart rate "
+                f"unless they used a fitness tracker during intense exercise or had a medical stress test."
+            )
+            max_hr = estimated_max_hr
 
+        st.write("**Chest Pain Type**")
         chest_pain = st.selectbox(
             "Chest Pain Type",
             [
-                "Typical Angina",
-                "Atypical Angina",
-                "Non-Anginal Pain",
-                "Asymptomatic",
+                "Typical Angina (chest pressure, tightness, squeezing, or discomfort that may happen with exercise or stress and may improve with rest)",
+                "Atypical Angina (chest discomfort that does not follow the classic pattern and may feel different or have unclear triggers)",
+                "Non-Anginal Pain (chest pain less likely to be heart-related and may come from muscle strain, digestion, anxiety, or breathing-related causes)",
+                "Asymptomatic (no noticeable chest pain symptoms)",
             ],
         )
+        st.caption(
+            "⚠️ **Safety note**: If chest pain is severe, new, worsening, or occurs with shortness of breath, fainting, sweating, or weakness, "
+            "seek emergency medical help immediately."
+        )
 
-        exercise_angina = st.selectbox("Exercise-Induced Angina", ["No", "Yes"]) 
+        st.write("**Exercise-Induced Angina**")
+        exercise_angina = st.selectbox(
+            "Exercise-Induced Angina",
+            [
+                "No (no chest pain, pressure, tightness, or discomfort during physical activity)",
+                "Yes (chest pain, pressure, tightness, or discomfort during exercise or physical activity)"
+            ]
+        ) 
 
         secondhand_smoke = st.selectbox("Secondhand Smoke Exposure", ["No", "Yes", "Not Sure"]) 
 
